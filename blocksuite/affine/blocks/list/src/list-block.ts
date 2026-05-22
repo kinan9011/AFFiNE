@@ -152,6 +152,7 @@ export class ListBlockComponent extends CaptionedBlockComponent<ListBlockModel> 
 
     const textAlignStyle = styleMap({
       textAlign: this.model.props.textAlign$?.value,
+      direction: this.model.props.textDirection$?.value,
     });
 
     const children = html`<div

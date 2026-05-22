@@ -9,3 +9,4 @@ export { indentBlocks } from './indent-blocks.js';
 export { selectBlock } from './select-block.js';
 export { selectBlocksBetween } from './select-blocks-between.js';
 export { updateBlockAlign } from './update-block-align.js';
+export { updateBlockDirection } from './update-block-direction.js';

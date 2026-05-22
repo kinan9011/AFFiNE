@@ -62,7 +62,15 @@ export enum TextResizing {
   AUTO_HEIGHT,
 }
 
+export enum TextDirection {
+  LTR = 'ltr',
+  RTL = 'rtl',
+}
+
+export const TextDirectionMap = createEnumMap(TextDirection);
+
 export const FontFamilySchema = z.nativeEnum(FontFamily);
 export const FontWeightSchema = z.nativeEnum(FontWeight);
 export const FontStyleSchema = z.nativeEnum(FontStyle);
 export const TextAlignSchema = z.nativeEnum(TextAlign);
+export const TextDirectionSchema = z.nativeEnum(TextDirection);

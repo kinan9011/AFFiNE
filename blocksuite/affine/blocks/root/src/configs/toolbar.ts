@@ -10,6 +10,7 @@ import {
 } from '@blocksuite/affine-block-embed';
 import {
   updateBlockAlign,
+  updateBlockDirection,
   updateBlockType,
 } from '@blocksuite/affine-block-note';
 import type { HighlightType } from '@blocksuite/affine-components/highlight-dropdown-menu';
@@ -28,10 +29,12 @@ import {
   EmbedLinkedDocBlockSchema,
   EmbedSyncedDocBlockSchema,
   type TextAlign,
+  type TextDirection,
 } from '@blocksuite/affine-model';
 import {
   textAlignConfigs,
   textConversionConfigs,
+  textDirectionConfigs,
 } from '@blocksuite/affine-rich-text';
 import {
   copySelectedModelsCommand,
@@ -186,6 +189,67 @@ const alignActionGroup = {
                 <editor-menu-action
                   aria-label=${name}
                   @click=${() => update(textAlign)}
+                >
+                  ${icon}<span class="label">${name}</span>
+                </editor-menu-action>
+              `
+            )}
+          </div>
+        </editor-menu-button>
+      `,
+    };
+  },
+} as const satisfies ToolbarActionGenerator;
+
+const directionActionGroup = {
+  id: 'b.direction',
+  when: ({ chain }) => isFormatSupported(chain).run()[0],
+  generate({ chain }) {
+    const [ok, { selectedModels = [] }] = chain
+      .tryAll(chain => [
+        chain.pipe(getTextSelectionCommand),
+        chain.pipe(getBlockSelectionsCommand),
+      ])
+      .pipe(getSelectedModelsCommand, { types: ['text', 'block'] })
+      .run();
+    if (!ok) return null;
+
+    const direction =
+      textDirectionConfigs.find(
+        ({ textDirection }) =>
+          textDirection ===
+          getMostCommonValue(
+            selectedModels.map(
+              ({ props }) => props as { textDirection?: TextDirection }
+            ),
+            'textDirection'
+          )
+      ) ?? textDirectionConfigs[0];
+    const update = (textDirection: TextDirection) => {
+      chain.pipe(updateBlockDirection, { textDirection }).run();
+    };
+
+    return {
+      content: html`
+        <editor-menu-button
+          .contentPadding="${'8px'}"
+          .button=${html`
+            <editor-icon-button
+              aria-label="Direction"
+              .tooltip="${'Text Direction'}"
+            >
+              ${direction.icon} ${EditorChevronDown}
+            </editor-icon-button>
+          `}
+        >
+          <div data-size="large" data-orientation="vertical">
+            ${repeat(
+              textDirectionConfigs,
+              item => item.name,
+              ({ textDirection, name, icon }) => html`
+                <editor-menu-action
+                  aria-label=${name}
+                  @click=${() => update(textDirection)}
                 >
                   ${icon}<span class="label">${name}</span>
                 </editor-menu-action>
@@ -382,6 +446,7 @@ export const builtinToolbarConfig = {
   actions: [
     conversionsActionGroup,
     alignActionGroup,
+    directionActionGroup,
     inlineTextActionGroup,
     highlightActionGroup,
     turnIntoDatabase,

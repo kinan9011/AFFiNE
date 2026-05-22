@@ -8,6 +8,8 @@ import {
   textAlignConfigs,
   type TextConversionConfig,
   textConversionConfigs,
+  type TextDirectionConfig,
+  textDirectionConfigs,
 } from '@blocksuite/affine-rich-text';
 import {
   getSelectedModelsCommand,
@@ -23,7 +25,11 @@ import {
 import { HeadingsIcon } from '@blocksuite/icons/lit';
 import { BlockSelection } from '@blocksuite/std';
 
-import { updateBlockAlign, updateBlockType } from '../commands';
+import {
+  updateBlockAlign,
+  updateBlockDirection,
+  updateBlockType,
+} from '../commands';
 import { tooltips } from './tooltips';
 
 let basicIndex = 0;
@@ -68,6 +74,10 @@ const noteSlashMenuConfig: SlashMenuConfig = {
 
     ...textAlignConfigs.map((config, index) =>
       createAlignItem(config, `2_Align@${index++}`)
+    ),
+
+    ...textDirectionConfigs.map((config, index) =>
+      createDirectionItem(config, `2_Direction@${index++}`)
     ),
 
     ...textFormatConfigs
@@ -115,6 +125,26 @@ function createAlignItem(
         .pipe(getTextSelectionCommand)
         .pipe(getSelectedModelsCommand, { types: ['text'] })
         .pipe(updateBlockAlign, { textAlign })
+        .run();
+    },
+  };
+}
+
+function createDirectionItem(
+  config: TextDirectionConfig,
+  group?: SlashMenuItem['group']
+): SlashMenuActionItem {
+  const { textDirection, name, icon } = config;
+  return {
+    name,
+    group,
+    icon,
+    action: ({ std }) => {
+      std.command
+        .chain()
+        .pipe(getTextSelectionCommand)
+        .pipe(getSelectedModelsCommand, { types: ['text'] })
+        .pipe(updateBlockDirection, { textDirection })
         .run();
     },
   };

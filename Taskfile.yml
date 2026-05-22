@@ -1,0 +1,136 @@
+version: '3'
+
+vars:
+  GIT_SHORT_HASH:
+    sh: git rev-parse --short HEAD
+  DOCKER_IMAGE: ghcr.io/kinan9011/affine
+  DOCKER_TAG: spark-{{.GIT_SHORT_HASH}}
+
+tasks:
+  # ── Dev ────────────────────────────────────────────────────────────────────
+
+  run:dev:
+    desc: Start dev server (interactive package selector)
+    cmds:
+      - yarn affine dev
+
+  run:web:
+    desc: Start web frontend dev server
+    cmds:
+      - yarn affine dev -p web
+
+  run:server:
+    desc: Start backend server in watch mode
+    cmds:
+      - yarn affine dev -p server
+
+  docker:compose:
+    desc: Start backing services (Postgres, Redis, ManticoreSearch, Mailpit)
+    cmds:
+      - docker compose -f .docker/dev/compose.yml up -d
+
+  docker:compose:down:
+    desc: Stop backing services
+    cmds:
+      - docker compose -f .docker/dev/compose.yml down
+
+  # ── Build ──────────────────────────────────────────────────────────────────
+
+  build:native:
+    desc: Build Rust server-native bindings
+    cmds:
+      - yarn workspace @affine/server-native build
+
+  build:server:
+    desc: Build backend server TypeScript
+    cmds:
+      - yarn workspace @affine/server build
+
+  build:web:
+    desc: Build web frontend
+    cmds:
+      - yarn affine @affine/web build
+
+  build:admin:
+    desc: Build admin frontend
+    cmds:
+      - yarn affine @affine/admin build
+
+  build:mobile:
+    desc: Build mobile frontend
+    cmds:
+      - yarn affine @affine/mobile build
+
+  build:docker:
+    desc: Build Docker image locally (linux/amd64) — tags as {{.DOCKER_IMAGE}}:{{.DOCKER_TAG}}
+    deps:
+      - build:native
+      - build:server
+      - build:web
+      - build:admin
+      - build:mobile
+    cmds:
+      - yarn workspaces focus @affine/server --production
+      - yarn workspace @affine/server prisma generate
+      - mv node_modules packages/backend/server/node_modules
+      - |
+        docker build \
+          -f .github/deployment/node/Dockerfile \
+          --platform linux/amd64 \
+          -t {{.DOCKER_IMAGE}}:{{.DOCKER_TAG}} \
+          .
+      - echo "Built {{.DOCKER_IMAGE}}:{{.DOCKER_TAG}}"
+
+  # ── Docker push ────────────────────────────────────────────────────────────
+
+  push:docker:
+    desc: Push Docker image to GHCR (requires GITHUB_TOKEN env var)
+    deps:
+      - build:docker
+    preconditions:
+      - sh: test -n "$GITHUB_TOKEN"
+        msg: 'GITHUB_TOKEN is not set'
+    cmds:
+      - echo $GITHUB_TOKEN | docker login ghcr.io -u kinan9011 --password-stdin
+      - docker push {{.DOCKER_IMAGE}}:{{.DOCKER_TAG}}
+      - echo "Pushed {{.DOCKER_IMAGE}}:{{.DOCKER_TAG}}"
+
+  # ── Quality ────────────────────────────────────────────────────────────────
+
+  lint:
+    desc: Run all linters (oxlint, eslint, prettier)
+    cmds:
+      - yarn lint
+
+  lint:fix:
+    desc: Auto-fix lint issues
+    cmds:
+      - yarn lint:fix
+
+  test:
+    desc: Run unit tests
+    cmds:
+      - yarn test
+
+  typecheck:
+    desc: TypeScript type check
+    cmds:
+      - yarn typecheck
+
+  # ── Utility ────────────────────────────────────────────────────────────────
+
+  init:
+    desc: Install dependencies and run codegen
+    cmds:
+      - yarn install
+      - yarn affine init
+
+  prisma:generate:
+    desc: Generate Prisma client
+    cmds:
+      - yarn workspace @affine/server prisma generate
+
+  clean:
+    desc: Clean all build artifacts and node_modules
+    cmds:
+      - yarn affine clean --all
