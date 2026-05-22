@@ -9,7 +9,9 @@ import {
   fontStyleOptions,
 } from '@affine/core/modules/editor-setting';
 import { FeatureFlagService } from '@affine/core/modules/feature-flag';
+import { I18nService } from '@affine/core/modules/i18n';
 import { WorkspaceService } from '@affine/core/modules/workspace';
+import { SUPPORTED_LANGUAGES } from '@affine/i18n';
 import track from '@affine/track';
 import { appendParagraphCommand } from '@blocksuite/affine/blocks/paragraph';
 import type { DocTitle } from '@blocksuite/affine/fragments/doc-title';
@@ -73,7 +75,14 @@ const BlockSuiteEditorImpl = ({
   const docTitleRef = useRef<DocTitle>(null);
   const edgelessRef = useRef<EdgelessEditor>(null);
   const featureFlags = useService(FeatureFlagService).flags;
-  const enableEditorRTL = useLiveData(featureFlags.enable_editor_rtl.$);
+  const editorRTLFlag = useLiveData(featureFlags.enable_editor_rtl.$);
+  const currentLanguage = useLiveData(
+    useService(I18nService).i18n.currentLanguageKey$
+  );
+  const isRTLLanguage = currentLanguage
+    ? !!SUPPORTED_LANGUAGES[currentLanguage]?.rtl
+    : false;
+  const enableEditorRTL = editorRTLFlag || isRTLLanguage;
   const editorSetting = useService(EditorSettingService).editorSetting;
   const server = useService(ServerService).server;
 

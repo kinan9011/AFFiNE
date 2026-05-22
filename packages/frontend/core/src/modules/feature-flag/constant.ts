@@ -194,7 +194,7 @@ export const AFFINE_FLAGS = {
       'com.affine.settings.workspace.experimental-features.enable-editor-rtl.name',
     description:
       'com.affine.settings.workspace.experimental-features.enable-editor-rtl.description',
-    configurable: isCanaryBuild,
+    configurable: true,
     defaultState: false,
   },
   enable_mobile_ai_button: {

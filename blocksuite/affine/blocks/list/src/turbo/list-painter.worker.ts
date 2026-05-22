@@ -39,7 +39,7 @@ class ListLayoutPainter implements BlockLayoutPainter {
   static readonly font = ListLayoutPainter.supportFontFace
     ? new FontFace(
         'Inter',
-        `url(https://fonts.gstatic.com/s/inter/v18/UcCo3FwrK3iLTcviYwYZ8UA3.woff2)`
+        `url(/fonts/Inter.woff2)`
       )
     : null;
 

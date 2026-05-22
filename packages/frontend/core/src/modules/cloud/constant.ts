@@ -206,6 +206,9 @@ const OFFICIAL_TELEMETRY_ENDPOINTS: Record<TelemetryChannel, string> = {
 export function getOfficialTelemetryEndpoint(
   channel = BUILD_CONFIG.appBuildType
 ): string {
+  if (environment.isSelfHosted) {
+    return '';
+  }
   if (BUILD_CONFIG.debug) {
     return BUILD_CONFIG.isNative
       ? OFFICIAL_TELEMETRY_ENDPOINTS.local
